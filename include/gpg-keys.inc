@@ -177,6 +177,13 @@ function gpg_key_get(string $rm): ?string {
                 "uid                  Stanislav Malyshev (PHP key) <stas@php.net>\n" .
                 "uid                  Stanislav Malyshev (PHP key) <smalyshev@sugarcrm.com>";
 
+        case 'svpernova09':
+            return
+                "pub   rsa4096 2026-04-16 [SC] [expires: 2031-04-15]\n" .
+                "      5CFF17B64DC1C244F5D0EAC3E43535E2EB19010E\n" .
+                "uid           [ultimate] Joe Ferguson (PHP) <svpernova09@php.net>\n" .
+                "sub   rsa4096 2026-04-16 [E] [expires: 2031-04-15]";
+
         case 'tyrael':
             return
                 "pub   2048R/33CFC8B3 2014-01-14 [expires: 2020-01-13]\n" .
