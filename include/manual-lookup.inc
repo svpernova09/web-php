@@ -110,7 +110,13 @@ function find_manual_page($lang, $keyword)
         if (in_array('sqlite', PDO::getAvailableDrivers(), true)) {
             if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/backend/manual-lookup.sqlite')) {
                 try {
-                    $dbh = new PDO( 'sqlite:' . $_SERVER['DOCUMENT_ROOT'] . '/backend/manual-lookup.sqlite', '', '', [PDO::ATTR_PERSISTENT => true, PDO::ATTR_EMULATE_PREPARES => true] );
+                    // ERRMODE_SILENT (the default before PHP 8.0) is required: the query
+                    // handling below relies on prepare()/execute() returning false on
+                    // failure so it can fall back to find_manual_page_slow(). Under PHP 8's
+                    // default ERRMODE_EXCEPTION those failures throw instead, which escaped
+                    // uncaught (e.g. "attempt to write a readonly database" on a locked or
+                    // read-only sqlite file) and produced fatals.
+                    $dbh = new PDO( 'sqlite:' . $_SERVER['DOCUMENT_ROOT'] . '/backend/manual-lookup.sqlite', '', '', [PDO::ATTR_PERSISTENT => true, PDO::ATTR_EMULATE_PREPARES => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT] );
                 } catch (PDOException $e) {
                     return find_manual_page_slow($lang, $keyword);
                 }
@@ -209,7 +215,11 @@ function find_manual_page($lang, $keyword)
                 }
             }
         } else {
-            error_noservice();
+            // The sqlite fast-path failed for this query (e.g. prepare() returned false
+            // on a broken/locked database). Fall back to the filesystem search like the
+            // other failure paths above, rather than showing a hard "service not working"
+            // page for what is only a best-effort lookup optimisation.
+            return find_manual_page_slow($langs[0], $kw);
         }
     }
 
